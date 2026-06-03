@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f6f3ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f6f3ec;
+  --card:  #fffdf8;
+  --ink:   #1f1d18;
+  --soft:  #6b6557;
+  --faint: #9a9283;
+  --line:  #dcd6c8;
+  --accent:#b5482a;
+  --asoft: #f0e4dd;
+  --good:  #3a8a5a;
+  --r:     14px;
+  --rsm:   11px;
+  --tab-h: 64px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; height: 100%; }
+body {
+  font-family: 'Spline Sans', system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.55;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── TABS ── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  display: flex;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  border: none; background: none; cursor: pointer;
+  font-family: 'Spline Sans', sans-serif;
+  font-size: 11px; font-weight: 500;
+  color: var(--faint); transition: color .15s;
+  padding: 0;
+}
+.tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .15s; }
+.tab-btn.active { color: var(--accent); }
+
+/* ── PAGES ── */
+.page {
+  position: fixed; inset: 0;
+  bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0; pointer-events: none; transition: opacity .18s;
+}
+.page.active { opacity: 1; pointer-events: all; }
+.inner {
+  max-width: 640px; margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 16px 32px;
+}
+
+/* ── SHARED HEADER ── */
+.eyebrow {
+  font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin-bottom: 10px;
+}
+.page-head {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 17px; margin-bottom: 22px;
+}
+.head-row {
+  display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 12px;
+}
+h1 {
+  font-family: 'Fraunces', serif; font-weight: 600;
+  font-size: clamp(30px, 8vw, 44px);
+  letter-spacing: -.01em; line-height: .98;
+}
+.head-meta { font-size: 13px; color: var(--soft); text-align: right; white-space: nowrap; }
+.head-meta b { display: block; color: var(--ink); font-size: 14px; font-weight: 600; }
+
+/* ── STATS ROW ── */
+.stats { display: flex; gap: 9px; margin-top: 16px; }
+.stat {
+  flex: 1; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--rsm);
+  padding: 12px 13px;
+}
+.stat .n {
+  font-family: 'Fraunces', serif; font-size: 24px;
+  font-weight: 600; line-height: 1;
+}
+.stat .n .ac { color: var(--accent); }
+.stat .l { font-size: 10.5px; color: var(--soft); letter-spacing: .05em; margin-top: 6px; text-transform: uppercase; }
+
+/* ── DAY PILLS ── */
+.daybar {
+  display: flex; gap: 7px; overflow-x: auto;
+  padding: 3px 0 7px; margin: 20px 0 6px;
+  scrollbar-width: none;
+}
+.daybar::-webkit-scrollbar { display: none; }
+.pill {
+  flex: 0 0 auto; background: var(--card);
+  border: 1px solid var(--line); color: var(--soft);
+  border-radius: 30px; padding: 8px 16px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: .15s; white-space: nowrap;
+  font-family: 'Spline Sans', sans-serif;
+}
+.pill:hover { border-color: var(--faint); }
+.pill.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.pill.rest { font-style: italic; }
+
+.focus {
+  font-family: 'Fraunces', serif; font-size: 14.5px;
+  color: var(--soft); margin: 8px 2px 16px;
+}
+.focus .dot { color: var(--accent); }
+
+/* ── EXERCISE CARDS (LOG) ── */
+.ex-card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 15px 16px;
+  margin-bottom: 10px; position: relative; overflow: hidden;
+}
+.ex-card::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--accent); opacity: .85;
+}
+.ex-card.complete::before { background: var(--good); }
+.ex-top {
+  display: flex; align-items: baseline;
+  justify-content: space-between; gap: 10px; margin-bottom: 12px;
+}
+.ex-title {
+  font-size: 15.5px; font-weight: 600;
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 6px;
+}
+.ex-title .chev {
+  font-size: 10px; color: var(--faint);
+  transition: transform .2s; display: inline-block;
+}
+.ex-card.open .ex-title .chev { transform: rotate(90deg); color: var(--accent); }
+.ex-target {
+  font-family: 'Fraunces', serif; font-size: 14px;
+  font-weight: 600; color: var(--accent); white-space: nowrap;
+}
+.inputs { display: flex; gap: 8px; }
+.field { flex: 1; }
+.field label {
+  display: block; font-size: 10.5px; color: var(--faint);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px;
+}
+.field input {
+  width: 100%; background: var(--paper); border: 1px solid var(--line);
+  color: var(--ink); font-family: 'Spline Sans', sans-serif;
+  font-size: 16px; font-weight: 500; padding: 10px 11px;
+  border-radius: var(--rsm); outline: none; transition: .15s;
+}
+.field input:focus { border-color: var(--accent); background: #fff; }
+.field input::placeholder { color: var(--faint); font-weight: 400; }
+.done-toggle {
+  flex: 0 0 auto; align-self: flex-end;
+  width: 44px; height: 42px; border-radius: var(--rsm);
+  border: 1px solid var(--line); background: var(--paper);
+  color: var(--faint); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: .15s;
+}
+.done-toggle.on { background: var(--good); border-color: var(--good); color: #fff; }
+
+/* ── HOW-TO PANEL ── */
+.howto {
+  display: none; margin-top: 13px; padding-top: 13px;
+  border-top: 1px dashed var(--line);
+}
+.ex-card.open .howto { display: block; }
+.howto-diagram {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--rsm); padding: 10px;
+  margin-bottom: 12px; display: flex; justify-content: center;
+}
+.howto-diagram svg { width: 130px; height: auto; color: var(--ink); }
+.howto-block { margin-bottom: 10px; }
+.howto-block:last-child { margin-bottom: 0; }
+.howto-block .h {
+  font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 600; color: var(--accent); margin-bottom: 3px;
+}
+.howto-block.warn .h { color: var(--soft); }
+.howto-block p { font-size: 13px; color: var(--ink); line-height: 1.5; }
+.howto-block.warn p { color: var(--soft); }
+
+/* ── REST / ACTIONS / MORNING TIP ── */
+.rest-msg {
+  background: var(--card); border: 1px dashed var(--line);
+  border-radius: var(--r); padding: 30px 22px; text-align: center;
+}
+.rest-msg .big {
+  font-family: 'Fraunces', serif; font-size: 22px;
+  font-weight: 600; margin-bottom: 8px;
+}
+.rest-msg p { font-size: 14px; color: var(--soft); max-width: 340px; margin: 0 auto; }
+
+.actions { display: flex; gap: 9px; margin-top: 14px; }
+.actions:empty { display: none; }
+.btn {
+  flex: 1; background: var(--card); border: 1px solid var(--line);
+  color: var(--ink); font-family: 'Spline Sans', sans-serif;
+  font-size: 13px; font-weight: 600; padding: 12px;
+  border-radius: var(--rsm); cursor: pointer; transition: .15s;
+}
+.btn:active { transform: scale(.98); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary.done { background: var(--good); border-color: var(--good); }
+.btn.danger { flex: 0 0 auto; color: var(--soft); }
+.btn.danger:hover { border-color: var(--accent); color: var(--accent); }
+
+.morning-tip {
+  margin-top: 11px; font-size: 12.5px; color: var(--soft);
+  padding: 10px 13px; background: var(--asoft); border-radius: var(--rsm);
+}
+.morning-tip b { color: var(--ink); font-weight: 600; }
+.morning-tip:empty { display: none; }
+
+.save-note {
+  text-align: center; font-size: 11.5px; color: var(--faint);
+  margin-top: 20px; letter-spacing: .03em; transition: .3s;
+}
+.save-note.flash { color: var(--accent); font-weight: 500; }
+
+/* ── PLAN PAGE ── */
+.plan-intro {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(15px, 3.5vw, 18px);
+  line-height: 1.45; margin-bottom: 26px; color: #34302a;
+}
+.plan-intro em { color: var(--accent); font-style: italic; }
+
+.section-label {
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--soft); font-weight: 600;
+  margin: 0 0 14px; display: flex; align-items: center; gap: 10px;
+}
+.section-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.days { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.day {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 18px 20px;
+  position: relative; overflow: hidden;
+}
+.day::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--accent); opacity: .85;
+}
+.day.rest-day::before { background: var(--line); }
+.day-head {
+  display: flex; align-items: baseline;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 5px 12px; margin-bottom: 3px;
+}
+.day-name {
+  font-family: 'Fraunces', serif; font-size: 21px; font-weight: 600;
+}
+.day-name .dow { color: var(--accent); }
+.day.rest-day .day-name .dow { color: var(--soft); }
+.day-when {
+  font-size: 11.5px; color: var(--soft); background: var(--asoft);
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.day.rest-day .day-when { background: #ece8de; }
+.day-focus { font-size: 12.5px; color: var(--soft); margin-bottom: 13px; }
+
+.pex {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 2px 14px; padding: 7px 0;
+  border-top: 1px dashed var(--line); align-items: baseline;
+}
+.pex:first-of-type { border-top: none; }
+.pex-name {
+  font-size: 14.5px; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 6px;
+}
+.pex-name .chev {
+  font-size: 10px; color: var(--faint);
+  transition: transform .2s; display: inline-block;
+}
+.pex.open .pex-name .chev { transform: rotate(90deg); color: var(--accent); }
+.pex-sets {
+  font-family: 'Fraunces', serif; font-size: 14px;
+  font-weight: 600; color: var(--accent); white-space: nowrap;
+}
+.pex-howto {
+  grid-column: 1/-1; display: none;
+  margin-top: 10px; padding: 13px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--rsm);
+}
+.pex.open .pex-howto { display: block; }
+
+.pmorn {
+  margin-top: 13px; padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px; color: var(--soft);
+}
+.pmorn b { color: var(--ink); font-weight: 600; }
+.rest-body { font-size: 14px; color: #34302a; }
+
+/* ── RULES ── */
+.rules {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 22px 20px; margin-top: 10px;
+}
+.rules h2 {
+  font-family: 'Fraunces', serif; font-size: 21px;
+  font-weight: 600; margin-bottom: 16px;
+}
+.rule { display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); }
+.rule:first-of-type { border-top: none; padding-top: 0; }
+.rule-n {
+  font-family: 'Fraunces', serif; font-size: 19px;
+  font-weight: 600; color: var(--accent); line-height: 1.2; min-width: 20px;
+}
+.rule-t b { display: block; font-size: 14.5px; font-weight: 600; margin-bottom: 2px; }
+.rule-t span { font-size: 13px; color: var(--soft); }
+
+@media (max-width: 480px) {
+  .inner { padding: max(20px, env(safe-area-inset-top)) 14px 28px; }
+  .day { padding: 15px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOG PAGE ══════════════ -->
+<div class="page active" id="page-log">
+<div class="inner">
+  <div class="page-head">
+    <div class="eyebrow">Strength &amp; Build Program</div>
+    <div class="head-row">
+      <h1>Training Log</h1>
+      <div class="head-meta"><b id="today-d">—</b><span id="today-m">—</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="stat-week"><span class="ac">0</span>/5</div><div class="l">This week</div></div>
+      <div class="stat"><div class="n" id="stat-total">0</div><div class="l">Total sessions</div></div>
+      <div class="stat"><div class="n" id="stat-streak">0</div><div class="l">Day streak</div></div>
+    </div>
+  </div>
+  <div class="daybar" id="daybar"></div>
+  <div class="focus" id="focus"></div>
+  <div id="log-content"></div>
+  <div class="actions" id="log-actions"></div>
+  <div class="morning-tip" id="morningtip"></div>
+  <div class="save-note" id="savenote">Saved automatically on this device</div>
+</div>
+</div>
+
+<!-- ══════════════ PLAN PAGE ══════════════ -->
+<div class="page" id="page-plan">
+<div class="inner">
+  <div class="page-head">
+    <div class="eyebrow">Strength &amp; Build Program</div>
+    <div class="head-row"><h1>Weekly Plan</h1></div>
+  </div>
+  <p class="plan-intro">The aim: <em>get stronger and fill out.</em> Light-to-moderate weights, clean form, 8–15 reps. Slowly add a rep or a little weight each week. Eat enough and sleep well — that's where the growth happens. Tap any exercise to see how to do it.</p>
+  <div class="section-label">The Week</div>
+  <div class="days" id="plan-days"></div>
+  <div class="section-label">Five rules</div>
+  <div class="rules">
+    <div class="rule"><div class="rule-n">1</div><div class="rule-t"><b>Form before weight</b><span>First two weeks, go light just to learn the movements. Always.</span></div></div>
+    <div class="rule"><div class="rule-n">2</div><div class="rule-t"><b>Progress slowly</b><span>Hit the top of the rep range with good form twice? Add a rep or a little weight.</span></div></div>
+    <div class="rule"><div class="rule-n">3</div><div class="rule-t"><b>Food is half the job</b><span>Eat more than usual — protein every meal: eggs, chicken, mince, milk, yogurt, tuna, peanut butter.</span></div></div>
+    <div class="rule"><div class="rule-n">4</div><div class="rule-t"><b>Sleep 9–10 hours</b><span>Growth and muscle repair happen while sleeping. Non-negotiable.</span></div></div>
+    <div class="rule"><div class="rule-n">5</div><div class="rule-t"><b>Listen to the body</b><span>Muscle soreness is fine. Sharp joint pain is not — stop that exercise. No max heavy lifts while still growing.</span></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════ TAB BAR ══════════════ -->
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tab-log" onclick="switchTab('log')">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Log
+  </button>
+  <button class="tab-btn" id="tab-plan" onclick="switchTab('plan')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Plan
+  </button>
+</nav>
+
+<script>
+// ── EXERCISE GUIDE ──
+const EXERCISE_GUIDE = {
+  "Push-ups": {
+    setup: "Hands flat on the floor a bit wider than your shoulders, arms straight. Legs out behind you, body in one straight line from head to heels. Squeeze your bum and brace your stomach.",
+    motion: "Bend your elbows and lower your chest toward the floor until it's about a fist's height away. Elbows point back at roughly 45°, not straight out. Push back up to the start, keeping the line straight.",
+    mistakes: "Sagging hips (keep the bum squeezed), flaring elbows straight out to the sides, only going halfway down. Too hard? Put your knees on the floor.",
+    svg: `<line x1="22" y1="78" x2="118" y2="78"/><circle cx="34" cy="54" r="7"/><line x1="40" y1="58" x2="104" y2="70"/><line x1="104" y1="70" x2="120" y2="78"/><line x1="55" y1="62" x2="52" y2="78"/><line x1="62" y1="63" x2="66" y2="78"/>`
+  },
+  "DB bench press": {
+    setup: "Lie on your back on the bench, feet flat on the floor. Hold a dumbbell in each hand at chest level, just outside your chest, palms facing your feet.",
+    motion: "Press both dumbbells straight up until your arms are nearly straight, bringing them close together at the top. Lower slowly back to your chest. Keep your shoulder blades pulled back and down into the bench.",
+    mistakes: "Bouncing the weights off your chest, arching your lower back off the bench, going too heavy and losing control. Start light to learn the path.",
+    svg: `<line x1="20" y1="80" x2="100" y2="80"/><line x1="30" y1="80" x2="30" y2="64"/><line x1="90" y1="80" x2="90" y2="64"/><line x1="28" y1="64" x2="92" y2="64"/><circle cx="58" cy="56" r="6"/><line x1="58" y1="62" x2="44" y2="40"/><line x1="58" y1="62" x2="72" y2="40"/><rect x="38" y="34" width="12" height="8" rx="2"/><rect x="66" y="34" width="12" height="8" rx="2"/>`
+  },
+  "DB shoulder press": {
+    setup: "Sit tall on the bench (or stand). Hold a dumbbell in each hand at shoulder height, palms facing forward, elbows pointing down and slightly forward.",
+    motion: "Press both dumbbells up overhead until your arms are nearly straight, bringing them slightly together at the top. Lower under control back to shoulder height. Keep your ribs down — don't lean back.",
+    mistakes: "Leaning back and turning it into a chest press, arching the lower back, banging the weights together at the top. Keep the core braced.",
+    svg: `<circle cx="60" cy="30" r="8"/><line x1="60" y1="38" x2="60" y2="66"/><line x1="60" y1="44" x2="42" y2="30"/><line x1="60" y1="44" x2="78" y2="30"/><rect x="36" y="22" width="12" height="9" rx="2"/><rect x="72" y="22" width="12" height="9" rx="2"/><line x1="60" y1="66" x2="50" y2="86"/><line x1="60" y1="66" x2="70" y2="86"/>`
+  },
+  "One-arm DB row": {
+    setup: "Put one knee and the same-side hand on the bench. Other foot on the floor, back flat and roughly parallel to the ground. Hold a dumbbell in your free hand, arm hanging straight down.",
+    motion: "Pull the dumbbell up toward your hip, leading with your elbow and squeezing your shoulder blade back. Lower it all the way down under control. Keep your back flat and still — don't twist.",
+    mistakes: "Rotating your torso to yank the weight up, shrugging the shoulder to your ear, rounding the back. Think 'elbow to back pocket'.",
+    svg: `<line x1="20" y1="84" x2="78" y2="84"/><line x1="30" y1="84" x2="30" y2="70"/><line x1="70" y1="84" x2="70" y2="70"/><line x1="28" y1="70" x2="72" y2="70"/><circle cx="92" cy="50" r="7"/><line x1="86" y1="54" x2="50" y2="66"/><line x1="50" y1="66" x2="40" y2="70"/><line x1="92" y1="57" x2="100" y2="74"/><rect x="94" y="74" width="12" height="8" rx="2"/><line x1="100" y1="56" x2="100" y2="46"/>`
+  },
+  "Assisted pull-ups": {
+    setup: "Use the pull-up bar with feet on a box or a band for help. Grab the bar a bit wider than shoulders, palms facing away. Hang with arms straight, shoulders pulled down (not up at your ears).",
+    motion: "Pull your chest toward the bar by driving your elbows down and back, until your chin clears the bar. Lower all the way down slowly. Let the box/band take just enough weight that you can do clean reps.",
+    mistakes: "Kipping or swinging, not going all the way down, shrugging. Slow lowering (negatives) builds the most strength early on.",
+    svg: `<line x1="20" y1="20" x2="100" y2="20"/><line x1="48" y1="20" x2="48" y2="34"/><line x1="72" y1="20" x2="72" y2="34"/><circle cx="60" cy="42" r="7"/><line x1="60" y1="49" x2="60" y2="74"/><line x1="60" y1="55" x2="48" y2="34"/><line x1="60" y1="55" x2="72" y2="34"/><line x1="60" y1="74" x2="52" y2="88"/><line x1="60" y1="74" x2="68" y2="88"/>`
+  },
+  "Bicep curls": {
+    setup: "Stand tall, a dumbbell in each hand by your sides, palms facing forward. Elbows tucked close to your ribs, shoulders relaxed.",
+    motion: "Bend your elbows and curl the dumbbells up toward your shoulders, keeping your upper arms still. Squeeze at the top, then lower slowly all the way down until arms are straight.",
+    mistakes: "Swinging the body to throw the weight up, elbows drifting forward, half reps. Keep upper arms pinned and let only the forearms move.",
+    svg: `<circle cx="60" cy="26" r="8"/><line x1="60" y1="34" x2="60" y2="70"/><line x1="60" y1="42" x2="48" y2="52"/><line x1="48" y1="52" x2="52" y2="38"/><line x1="60" y1="42" x2="72" y2="52"/><line x1="72" y1="52" x2="68" y2="38"/><rect x="46" y="32" width="11" height="8" rx="2"/><rect x="63" y="32" width="11" height="8" rx="2"/><line x1="60" y1="70" x2="52" y2="88"/><line x1="60" y1="70" x2="68" y2="88"/>`
+  },
+  "Goblet squats": {
+    setup: "Hold one dumbbell vertically against your chest with both hands cupping the top end. Feet about shoulder-width, toes turned out slightly. Stand tall, chest up.",
+    motion: "Push your hips back and bend your knees to lower down, keeping your chest up and heels on the floor. Go until your thighs are about parallel to the floor (or as low as comfy). Drive up through your heels to stand.",
+    mistakes: "Knees caving inward (push them out over your toes), heels lifting, rounding the back, leaning too far forward. Keep the chest proud.",
+    svg: `<circle cx="60" cy="22" r="8"/><line x1="60" y1="30" x2="60" y2="52"/><rect x="54" y="34" width="12" height="14" rx="2"/><line x1="60" y1="52" x2="44" y2="64"/><line x1="44" y1="64" x2="44" y2="84"/><line x1="60" y1="52" x2="76" y2="64"/><line x1="76" y1="64" x2="76" y2="84"/><line x1="38" y1="84" x2="82" y2="84"/>`
+  },
+  "DB Romanian deadlift": {
+    setup: "Stand tall holding a dumbbell in each hand in front of your thighs, palms facing you. Feet hip-width, knees softly bent.",
+    motion: "Push your hips straight back and slide the dumbbells down the front of your legs, keeping your back flat and chest up. Feel a stretch in the back of your thighs, then drive your hips forward to stand and squeeze your glutes.",
+    mistakes: "Rounding the back, squatting instead of hinging at the hips, letting the weights drift away from your legs. It's a hip hinge, not a squat.",
+    svg: `<circle cx="48" cy="28" r="8"/><line x1="48" y1="36" x2="72" y2="54"/><line x1="72" y1="54" x2="72" y2="84"/><line x1="55" y1="44" x2="55" y2="64"/><rect x="49" y="62" width="12" height="8" rx="2"/><line x1="38" y1="84" x2="84" y2="84"/><path d="M48 36 q-6 12 4 22" fill="none"/>`
+  },
+  "Walking lunges": {
+    setup: "Stand tall, a dumbbell in each hand by your sides (or bodyweight). Feet hip-width, core braced, eyes forward.",
+    motion: "Step forward with one leg and lower until both knees are bent about 90°, back knee hovering just above the floor. Push through your front heel to stand, then step the back foot through into the next lunge.",
+    mistakes: "Front knee caving in or shooting way past the toes, leaning forward, tiny steps. Take a long enough step and keep the torso upright.",
+    svg: `<circle cx="50" cy="24" r="7"/><line x1="50" y1="31" x2="50" y2="56"/><line x1="50" y1="56" x2="34" y2="84"/><line x1="50" y1="56" x2="74" y2="68"/><line x1="74" y1="68" x2="74" y2="84"/><line x1="50" y1="40" x2="42" y2="54"/><line x1="50" y1="40" x2="58" y2="54"/><rect x="36" y="52" width="10" height="7" rx="2"/><rect x="55" y="52" width="10" height="7" rx="2"/><line x1="26" y1="84" x2="84" y2="84"/>`
+  },
+  "Step-ups on box": {
+    setup: "Stand facing a sturdy box or bench, dumbbells by your sides or hands free. Box height where your thigh is about parallel when your foot's on top.",
+    motion: "Place one whole foot flat on the box. Push through that heel to stand all the way up, bringing the other foot up. Step back down with control, same leg leading. Finish your reps, then swap legs.",
+    mistakes: "Pushing off the back foot's toes instead of driving through the top foot, slamming back down, letting the knee cave in. Let the top leg do the work.",
+    svg: `<rect x="64" y="58" width="34" height="26"/><circle cx="46" cy="28" r="7"/><line x1="46" y1="35" x2="52" y2="58"/><line x1="52" y1="58" x2="72" y2="58"/><line x1="46" y1="42" x2="40" y2="58"/><line x1="40" y1="58" x2="40" y2="84"/><line x1="46" y1="38" x2="38" y2="48"/><line x1="46" y1="38" x2="54" y2="48"/><line x1="20" y1="84" x2="98" y2="84"/>`
+  },
+  "Calf raises": {
+    setup: "Stand tall with the balls of your feet on the edge of a step or the floor, heels free to drop. Hold something for balance if needed.",
+    motion: "Push up onto your toes as high as you can, squeezing your calves at the top. Pause for a beat, then lower your heels slowly all the way down for a good stretch.",
+    mistakes: "Bouncing fast with no control, tiny range of motion, not pausing at the top. Slow and full range is what works the calf.",
+    svg: `<circle cx="60" cy="24" r="8"/><line x1="60" y1="32" x2="60" y2="64"/><line x1="60" y1="40" x2="50" y2="52"/><line x1="60" y1="40" x2="70" y2="52"/><line x1="60" y1="64" x2="52" y2="78"/><line x1="60" y1="64" x2="68" y2="78"/><line x1="44" y1="84" x2="76" y2="84"/>`
+  },
+  "Swiss-ball leg curls": {
+    setup: "Lie on your back on the floor, heels resting on top of the swiss ball, legs straight. Arms flat by your sides for stability.",
+    motion: "Lift your hips so your body's in a straight line from shoulders to heels. Then bend your knees and roll the ball toward your bum with your heels. Roll it back out slowly, keeping your hips up the whole time.",
+    mistakes: "Letting the hips drop, using arms to push, rushing. Keep hips lifted and let the back of the thighs do the curling.",
+    svg: `<circle cx="84" cy="62" r="20" fill="none"/><line x1="20" y1="60" x2="64" y2="60"/><circle cx="22" cy="56" r="6"/><line x1="64" y1="60" x2="78" y2="50"/><line x1="34" y1="60" x2="40" y2="50"/><line x1="40" y1="50" x2="52" y2="54"/>`
+  },
+  "Bike or rower": {
+    setup: "Bike: set the seat so your knee has a slight bend at the bottom of the stroke. Rower: strap your feet in, sit tall, grab the handle with straight arms.",
+    motion: "Bike: steady pace or 30s hard / 90s easy intervals. Rower: push with legs first, then lean back slightly, then pull the handle to your ribs — reverse the order coming back. Smooth and rhythmic.",
+    mistakes: "Rowing with mostly arms (it's legs → body → arms), hunching the back, going so hard you burn out in two minutes. Pace it.",
+    svg: `<circle cx="38" cy="74" r="12" fill="none"/><circle cx="86" cy="74" r="12" fill="none"/><line x1="38" y1="74" x2="62" y2="44"/><line x1="62" y1="44" x2="86" y2="74"/><line x1="62" y1="44" x2="62" y2="30"/><line x1="50" y1="30" x2="74" y2="30"/><circle cx="62" cy="22" r="6"/><line x1="74" y1="30" x2="86" y2="40"/>`
+  },
+  "Plank": {
+    setup: "Forearms on the floor, elbows directly under your shoulders. Legs out behind you, toes on the floor. Body in one straight line from head to heels.",
+    motion: "Hold the position. Squeeze your bum, brace your stomach like someone's about to poke it, and breathe normally. Keep your hips level — not sagging, not piked up.",
+    mistakes: "Hips sagging toward the floor, bum poking up in the air, holding your breath, head dropping. Keep one straight line and keep breathing.",
+    svg: `<line x1="20" y1="78" x2="118" y2="78"/><circle cx="38" cy="58" r="7"/><line x1="42" y1="62" x2="104" y2="72"/><line x1="104" y1="72" x2="118" y2="78"/><line x1="44" y1="62" x2="40" y2="78"/><line x1="40" y1="78" x2="52" y2="78"/>`
+  },
+  "Dead bug": {
+    setup: "Lie on your back. Arms pointing straight up at the ceiling. Knees bent and lifted so thighs are vertical, shins parallel to the floor. Press your lower back gently into the floor.",
+    motion: "Slowly lower your opposite arm and leg toward the floor without letting your back arch. Bring them back, then switch sides. Slow and controlled.",
+    mistakes: "Lower back arching off the floor, moving fast, holding your breath. Keep your back glued down — only go as far as you can control.",
+    svg: `<line x1="24" y1="62" x2="92" y2="62"/><circle cx="28" cy="58" r="6"/><line x1="40" y1="62" x2="40" y2="44"/><line x1="40" y1="44" x2="56" y2="44"/><line x1="64" y1="62" x2="80" y2="50"/><line x1="80" y1="50" x2="92" y2="54"/><line x1="50" y1="62" x2="58" y2="48"/>`
+  },
+  "Russian twists": {
+    setup: "Sit on the floor, knees bent, feet flat (or lifted for harder). Lean back slightly so your stomach is working, back straight. Hold hands together or a light weight at your chest.",
+    motion: "Twist your torso to one side, bringing your hands toward the floor beside your hip. Twist to the other side. Keep the movement coming from your waist, not just your arms.",
+    mistakes: "Rounding the back, just swinging the arms while the torso stays still, going too fast. Rotate through the middle and keep the chest up.",
+    svg: `<circle cx="60" cy="30" r="8"/><line x1="60" y1="38" x2="60" y2="58"/><line x1="60" y1="58" x2="40" y2="74"/><line x1="60" y1="58" x2="80" y2="68"/><line x1="60" y1="44" x2="78" y2="50"/><path d="M44 30 q16 -10 32 0" fill="none"/><line x1="30" y1="80" x2="90" y2="80"/>`
+  },
+  "Hanging knee raises": {
+    setup: "Hang from the pull-up bar, arms straight, shoulders pulled down (not at your ears). Legs straight down, body still.",
+    motion: "Bend your knees and lift them up toward your chest, curling your hips up slightly at the top. Lower slowly back down with control — don't just drop. Keep the swinging to a minimum.",
+    mistakes: "Swinging to use momentum, only lifting a little, dropping fast. If your grip gives out first, that's normal — it improves. Slow lowering matters.",
+    svg: `<line x1="20" y1="18" x2="100" y2="18"/><line x1="50" y1="18" x2="50" y2="32"/><line x1="70" y1="18" x2="70" y2="32"/><circle cx="60" cy="40" r="7"/><line x1="60" y1="47" x2="60" y2="66"/><line x1="60" y1="50" x2="50" y2="32"/><line x1="60" y1="50" x2="70" y2="32"/><line x1="60" y1="66" x2="74" y2="64"/><line x1="74" y1="64" x2="74" y2="78"/>`
+  },
+  "Swiss-ball rollouts": {
+    setup: "Kneel on the floor with your forearms resting on top of the swiss ball, hands together. Brace your stomach, body in a straight line from knees to head.",
+    motion: "Slowly roll the ball forward by extending your arms, letting your body lower toward a straight line. Only go as far as you can keep your back flat. Pull the ball back in by bracing your stomach.",
+    mistakes: "Letting the lower back sag as you roll out, going too far too soon, using arms instead of core. Keep the stomach tight the whole way.",
+    svg: `<circle cx="86" cy="58" r="16" fill="none"/><circle cx="34" cy="44" r="7"/><line x1="38" y1="48" x2="74" y2="56"/><line x1="38" y1="48" x2="40" y2="78"/><line x1="40" y1="78" x2="56" y2="78"/><line x1="74" y1="56" x2="80" y2="50"/>`
+  },
+  "Incline DB press": {
+    setup: "Set the bench to a low incline (about 30°). Lie back, feet flat on the floor. Dumbbell in each hand at upper-chest level, palms facing your feet.",
+    motion: "Press both dumbbells up and slightly together until your arms are nearly straight. Lower slowly to your upper chest. Keep shoulder blades pulled back into the bench.",
+    mistakes: "Setting the bench too steep (turns into a shoulder press), bouncing off the chest, arching hard. A low-to-moderate incline is plenty.",
+    svg: `<line x1="22" y1="84" x2="58" y2="56"/><line x1="58" y1="56" x2="92" y2="56"/><line x1="40" y1="70" x2="40" y2="84"/><line x1="88" y1="56" x2="88" y2="84"/><circle cx="56" cy="48" r="6"/><line x1="56" y1="54" x2="44" y2="36"/><line x1="56" y1="54" x2="68" y2="36"/><rect x="38" y="30" width="11" height="7" rx="2"/><rect x="64" y="30" width="11" height="7" rx="2"/>`
+  },
+  "DB row": {
+    setup: "Hold a dumbbell in each hand, hinge forward at the hips so your back is flat and chest points roughly at the floor, knees softly bent. Arms hang straight down.",
+    motion: "Pull both dumbbells up toward your hips, leading with your elbows and squeezing your shoulder blades together. Lower under control all the way down. Keep your back flat and torso still.",
+    mistakes: "Standing up as you pull, rounding the spine, shrugging. Stay hinged and pull the elbows toward your back pockets.",
+    svg: `<circle cx="34" cy="40" r="7"/><line x1="40" y1="44" x2="80" y2="56"/><line x1="80" y1="56" x2="80" y2="84"/><line x1="55" y1="50" x2="55" y2="66"/><rect x="49" y="64" width="12" height="8" rx="2"/><line x1="68" y1="54" x2="68" y2="70"/><rect x="62" y="68" width="12" height="8" rx="2"/>`
+  },
+  "Lateral raises": {
+    setup: "Stand tall, a light dumbbell in each hand by your sides, palms facing your body, slight bend in the elbows. Core braced, shoulders relaxed down.",
+    motion: "Raise both arms out to the sides until they're about shoulder height, like making a T. Lead with your elbows, little fingers slightly up. Lower slowly. Use light weight — this one's all control.",
+    mistakes: "Going too heavy and swinging, shrugging the shoulders up, lifting way above shoulder height. Keep it slow with light weights.",
+    svg: `<circle cx="60" cy="26" r="8"/><line x1="60" y1="34" x2="60" y2="66"/><line x1="60" y1="42" x2="38" y2="40"/><line x1="60" y1="42" x2="82" y2="40"/><rect x="28" y="36" width="11" height="8" rx="2"/><rect x="81" y="36" width="11" height="8" rx="2"/><line x1="60" y1="66" x2="52" y2="86"/><line x1="60" y1="66" x2="68" y2="86"/>`
+  },
+  "Pull-ups / negatives": {
+    setup: "Grab the bar a bit wider than shoulders, palms facing away. For negatives: step up off a box so your chin starts above the bar, arms bent.",
+    motion: "Full pull-up: hang straight, pull chest to bar, lower slowly. Negatives: start at top with chin over bar, lower yourself down as slowly as possible — aim for 3–5 seconds. Step back up and repeat.",
+    mistakes: "Swinging/kipping, dropping fast on the negative (the slow lower is the whole point), not using full range. Negatives build the strength to do your first real pull-up.",
+    svg: `<line x1="20" y1="20" x2="100" y2="20"/><line x1="48" y1="20" x2="48" y2="34"/><line x1="72" y1="20" x2="72" y2="34"/><circle cx="60" cy="44" r="7"/><line x1="60" y1="51" x2="60" y2="76"/><line x1="60" y1="56" x2="48" y2="34"/><line x1="60" y1="56" x2="72" y2="34"/><line x1="60" y1="76" x2="52" y2="90"/><line x1="60" y1="76" x2="68" y2="90"/>`
+  },
+  "Hammer curls": {
+    setup: "Stand tall, a dumbbell in each hand by your sides, palms facing your body (thumbs forward) — like holding two hammers. Elbows tucked to your ribs.",
+    motion: "Curl the dumbbells up toward your shoulders keeping the palms facing in the whole time. Keep upper arms still. Squeeze at the top, lower slowly all the way down.",
+    mistakes: "Swinging the body, elbows drifting forward, rotating the wrists. Keep palms facing each other and only the forearms move.",
+    svg: `<circle cx="60" cy="26" r="8"/><line x1="60" y1="34" x2="60" y2="70"/><line x1="60" y1="42" x2="48" y2="52"/><line x1="48" y1="52" x2="50" y2="38"/><line x1="60" y1="42" x2="72" y2="52"/><line x1="72" y1="52" x2="70" y2="38"/><rect x="45" y="34" width="8" height="11" rx="2"/><rect x="67" y="34" width="8" height="11" rx="2"/><line x1="60" y1="70" x2="52" y2="88"/><line x1="60" y1="70" x2="68" y2="88"/>`
+  },
+  "Tricep extensions": {
+    setup: "Hold one dumbbell with both hands and raise it straight overhead, arms extended. Elbows pointing up and forward, tucked in close.",
+    motion: "Bend at the elbows to lower the weight behind your head, keeping your upper arms still and pointing up. Straighten your arms back up, squeezing the triceps at the top.",
+    mistakes: "Elbows flaring out wide, upper arms swinging, going too heavy and straining the elbows. Keep the elbows in and pointing forward, move only the forearms.",
+    svg: `<circle cx="60" cy="44" r="8"/><line x1="60" y1="52" x2="60" y2="84"/><line x1="60" y1="56" x2="48" y2="40"/><line x1="48" y1="40" x2="46" y2="26"/><line x1="60" y1="56" x2="72" y2="40"/><line x1="72" y1="40" x2="74" y2="26"/><rect x="40" y="20" width="40" height="8" rx="3"/><line x1="60" y1="84" x2="52" y2="98"/><line x1="60" y1="84" x2="68" y2="98"/>`
+  },
+  "Goblet squat": {
+    setup: "Hold one dumbbell vertically against your chest, both hands cupping the top end. Feet about shoulder-width, toes slightly out. Stand tall, chest up, core braced.",
+    motion: "Push your hips back and bend your knees to lower down, chest up and heels planted. Go to about thighs-parallel or as deep as you can with good form. Drive up through your heels.",
+    mistakes: "Knees caving in, heels lifting, rounding the back. Push the knees out and keep the chest proud the whole way.",
+    svg: `<circle cx="60" cy="22" r="8"/><line x1="60" y1="30" x2="60" y2="52"/><rect x="54" y="34" width="12" height="14" rx="2"/><line x1="60" y1="52" x2="44" y2="64"/><line x1="44" y1="64" x2="44" y2="84"/><line x1="60" y1="52" x2="76" y2="64"/><line x1="76" y1="64" x2="76" y2="84"/><line x1="38" y1="84" x2="82" y2="84"/>`
+  },
+  "Box step-ups": {
+    setup: "Stand facing a sturdy box or bench. Dumbbells by your sides or hands free. Pick a height where your thigh is about parallel when your foot's on top.",
+    motion: "Put one whole foot flat on the box. Drive through that heel to stand all the way up, bringing the other foot up. Step down with control, same leg leading. Do your reps, then swap legs.",
+    mistakes: "Pushing off the bottom foot's toes, slamming down, knee caving inward. Make the top leg do the lifting and lower yourself slowly.",
+    svg: `<rect x="64" y="58" width="34" height="26"/><circle cx="46" cy="28" r="7"/><line x1="46" y1="35" x2="52" y2="58"/><line x1="52" y1="58" x2="72" y2="58"/><line x1="46" y1="42" x2="40" y2="58"/><line x1="40" y1="58" x2="40" y2="84"/><line x1="46" y1="38" x2="38" y2="48"/><line x1="46" y1="38" x2="54" y2="48"/><line x1="20" y1="84" x2="98" y2="84"/>`
+  }
+};
+
+// ── PLAN DATA ──
+const PLAN = {
+  Mon:{ focus:"Upper body · chest, back, shoulders, arms", morning:"2 sets max push-ups + 30s plank",
+    ex:[
+      {n:"Push-ups",t:"3 × 8–12"},
+      {n:"DB bench press",t:"3 × 10"},
+      {n:"DB shoulder press",t:"3 × 10"},
+      {n:"One-arm DB row",t:"3 × 10 ea"},
+      {n:"Assisted pull-ups",t:"3 × 5"},
+      {n:"Bicep curls",t:"3 × 12"},
+    ]},
+  Tue:{ focus:"Lower body · legs & glutes", morning:"2 sets of 20 bodyweight squats",
+    ex:[
+      {n:"Goblet squats",t:"3 × 12"},
+      {n:"DB Romanian deadlift",t:"3 × 10"},
+      {n:"Walking lunges",t:"3 × 10 ea"},
+      {n:"Step-ups on box",t:"3 × 10 ea"},
+      {n:"Calf raises",t:"3 × 15"},
+      {n:"Swiss-ball leg curls",t:"3 × 12"},
+    ]},
+  Wed:{ focus:"Cardio & core · lighter day", morning:"Rest or a light stretch",
+    ex:[
+      {n:"Bike or rower",t:"20–25 min"},
+      {n:"Plank",t:"3 × 30s"},
+      {n:"Dead bug",t:"3 × 10"},
+      {n:"Russian twists",t:"3 × 15"},
+      {n:"Hanging knee raises",t:"3 × 8"},
+      {n:"Swiss-ball rollouts",t:"3 × 8"},
+    ]},
+  Thu:{ focus:"Upper body · different angles", morning:"2 sets max push-ups",
+    ex:[
+      {n:"Incline DB press",t:"3 × 10"},
+      {n:"DB row",t:"3 × 10 ea"},
+      {n:"Lateral raises",t:"3 × 12"},
+      {n:"Pull-ups / negatives",t:"3 × 5"},
+      {n:"Hammer curls",t:"3 × 12"},
+      {n:"Tricep extensions",t:"3 × 12"},
+    ]},
+  Fri:{ focus:"Full body · finish the week", morning:"Rest or light stretch",
+    ex:[
+      {n:"Goblet squat",t:"3 × 12"},
+      {n:"Push-ups",t:"3 × max"},
+      {n:"DB Romanian deadlift",t:"3 × 10"},
+      {n:"DB shoulder press",t:"3 × 10"},
+      {n:"Box step-ups",t:"3 × 10 ea"},
+      {n:"Plank",t:"3 × 40s"},
+    ]},
+  Sat:{ rest:true, focus:"Active & fun",    title:"Get out and move",  body:"Sport, bike ride, swim, walk, footy — anything active you enjoy for 30–60 minutes." },
+  Sun:{ rest:true, focus:"Rest day",         title:"Rest up",           body:"Full rest. Muscle grows now, not in the gym. Focus on sleep and good food." },
+};
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const PLAN_META = {
+  Mon:{ when:"after 4pm", dayFocus:"Chest, back, shoulders & arms" },
+  Tue:{ when:"after 4pm", dayFocus:"Legs & glutes" },
+  Wed:{ when:"after 4pm", dayFocus:"Heart & midsection" },
+  Thu:{ when:"after 4pm", dayFocus:"Upper chest & arms" },
+  Fri:{ when:"after 4pm", dayFocus:"Full body finish" },
+  Sat:{ when:"anytime",   dayFocus:"Active recovery" },
+  Sun:{ when:"all day",   dayFocus:"Recovery" },
+};
+const ALIASES = {
+  "Goblet squats":"Goblet squats",
+  "Step-ups on box":"Step-ups on box",
+};
+
+// ── STORAGE ──
+const KEY = "training-log-v1";
+let store = {};
+try { store = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) { store = {}; }
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {}
+  const n = document.getElementById("savenote");
+  n.textContent = "Saved"; n.classList.add("flash");
+  clearTimeout(window._st);
+  window._st = setTimeout(()=>{ n.classList.remove("flash"); n.textContent="Saved automatically on this device"; }, 1400);
+}
+function weekId(d) {
+  const t = new Date(d); t.setHours(0,0,0,0);
+  const day = (t.getDay()+6)%7; t.setDate(t.getDate()-day);
+  const y=t.getFullYear(), m=String(t.getMonth()+1).padStart(2,"0"), dd=String(t.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
+}
+function curDayName() { return DAYS[(new Date().getDay()+6)%7]; }
+function recordKey(d) { return weekId(new Date())+"::"+d; }
+
+// ── TABS ──
+function switchTab(t) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-"+t).classList.add("active");
+  document.getElementById("tab-"+t).classList.add("active");
+}
+
+// ── HOW-TO HTML ──
+function howtoHTML(name) {
+  const g = EXERCISE_GUIDE[name] || EXERCISE_GUIDE[ALIASES[name]];
+  if (!g) return "";
+  return `<div class="howto">
+    <div class="howto-diagram"><svg viewBox="0 0 120 104" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${g.svg}</svg></div>
+    <div class="howto-block"><div class="h">Setup</div><p>${g.setup}</p></div>
+    <div class="howto-block"><div class="h">The motion</div><p>${g.motion}</p></div>
+    <div class="howto-block warn"><div class="h">Common mistakes</div><p>${g.mistakes}</p></div>
+  </div>`;
+}
+
+// ── PLAN TAB ──
+function buildPlan() {
+  const container = document.getElementById("plan-days");
+  container.innerHTML = "";
+  DAYS.forEach(d => {
+    const day = PLAN[d], meta = PLAN_META[d];
+    const el = document.createElement("article");
+    el.className = "day" + (day.rest ? " rest-day" : "");
+    if (day.rest) {
+      el.innerHTML = `
+        <div class="day-head">
+          <div class="day-name"><span class="dow">${d}</span> · ${day.focus}</div>
+          <div class="day-when">${meta.when}</div>
+        </div>
+        <div class="rest-body">${day.body}</div>`;
+    } else {
+      const rows = day.ex.map(e => {
+        const g = EXERCISE_GUIDE[e.n];
+        const hw = g ? `<div class="pex-howto">
+          <div class="howto-diagram"><svg viewBox="0 0 120 104" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${g.svg}</svg></div>
+          <div class="howto-block"><div class="h">Setup</div><p>${g.setup}</p></div>
+          <div class="howto-block"><div class="h">The motion</div><p>${g.motion}</p></div>
+          <div class="howto-block warn"><div class="h">Common mistakes</div><p>${g.mistakes}</p></div>
+        </div>` : "";
+        return `<div class="pex">
+          <div class="pex-name"><span class="chev">▶</span>${e.n}</div>
+          <div class="pex-sets">${e.t}</div>
+          ${hw}
+        </div>`;
+      }).join("");
+      el.innerHTML = `
+        <div class="day-head">
+          <div class="day-name"><span class="dow">${d}</span> · ${meta.dayFocus}</div>
+          <div class="day-when">${meta.when}</div>
+        </div>
+        <div class="day-focus">${day.focus}</div>
+        ${rows}
+        <div class="pmorn"><b>School morning:</b> ${day.morning}</div>`;
+    }
+    container.appendChild(el);
+  });
+  // wire clicks
+  container.querySelectorAll(".pex-name").forEach(nameEl => {
+    nameEl.addEventListener("click", () => nameEl.closest(".pex").classList.toggle("open"));
+  });
+}
+
+// ── LOG TAB ──
+let selected = curDayName();
+
+function renderLog() {
+  const now = new Date();
+  document.getElementById("today-d").textContent = now.toLocaleDateString(undefined,{weekday:"long"});
+  document.getElementById("today-m").textContent = now.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+
+  const bar = document.getElementById("daybar");
+  bar.innerHTML = "";
+  DAYS.forEach(d => {
+    const p = document.createElement("button");
+    p.className = "pill"+(d===selected?" active":"")+(PLAN[d].rest?" rest":"");
+    p.textContent = d;
+    p.onclick = () => { selected=d; renderLog(); };
+    bar.appendChild(p);
+  });
+
+  const day = PLAN[selected];
+  document.getElementById("focus").innerHTML = '<span class="dot">●</span> '+day.focus;
+
+  const content = document.getElementById("log-content");
+  const actions = document.getElementById("log-actions");
+  const tip = document.getElementById("morningtip");
+  content.innerHTML = "";
+
+  if (day.rest) {
+    content.innerHTML = `<div class="rest-msg"><div class="big">${day.title}</div><p>${day.body}</p></div>`;
+    actions.innerHTML = ""; tip.innerHTML = "";
+    updateStats(); return;
+  }
+
+  const rk = recordKey(selected);
+  if (!store[rk]) store[rk] = {ex:{}, done:false};
+  const rec = store[rk];
+
+  day.ex.forEach((e, i) => {
+    const saved = rec.ex[i] || {w:"",r:"",done:false};
+    const card = document.createElement("div");
+    card.className = "ex-card"+(saved.done?" complete":"");
+    card.innerHTML = `
+      <div class="ex-top">
+        <div class="ex-title" data-i="${i}"><span class="chev">▶</span>${e.n}</div>
+        <div class="ex-target">${e.t}</div>
+      </div>
+      <div class="inputs">
+        <div class="field"><label>Weight (kg)</label><input inputmode="decimal" placeholder="–" value="${saved.w}" data-i="${i}" data-f="w"></div>
+        <div class="field"><label>Reps done</label><input inputmode="numeric" placeholder="–" value="${saved.r}" data-i="${i}" data-f="r"></div>
+        <button class="done-toggle ${saved.done?'on':''}" data-i="${i}">✓</button>
+      </div>
+      ${howtoHTML(e.n)}`;
+    content.appendChild(card);
+  });
+
+  content.querySelectorAll(".ex-title").forEach(t => {
+    t.addEventListener("click", () => t.closest(".ex-card").classList.toggle("open"));
+  });
+  content.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const i=inp.dataset.i, f=inp.dataset.f;
+      if (!rec.ex[i]) rec.ex[i]={w:"",r:"",done:false};
+      rec.ex[i][f]=inp.value; save();
+    });
+  });
+  content.querySelectorAll(".done-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i=btn.dataset.i;
+      if (!rec.ex[i]) rec.ex[i]={w:"",r:"",done:false};
+      rec.ex[i].done = !rec.ex[i].done;
+      btn.classList.toggle("on", rec.ex[i].done);
+      btn.closest(".ex-card").classList.toggle("complete", rec.ex[i].done);
+      rec.done = day.ex.every((_,k)=> rec.ex[k]&&rec.ex[k].done);
+      save(); updateStats(); refreshFinish();
+    });
+  });
+
+  actions.innerHTML = `
+    <button class="btn primary" id="finishbtn">Mark session complete</button>
+    <button class="btn danger" id="clearbtn">Clear</button>`;
+  document.getElementById("finishbtn").onclick = () => {
+    day.ex.forEach((_,k)=>{ if(!rec.ex[k]) rec.ex[k]={w:"",r:"",done:false}; rec.ex[k].done=true; });
+    rec.done=true; save(); renderLog();
+  };
+  document.getElementById("clearbtn").onclick = () => { delete store[rk]; save(); renderLog(); };
+
+  tip.innerHTML = `<b>School morning:</b> ${day.morning}`;
+  refreshFinish(); updateStats();
+}
+
+function refreshFinish() {
+  const day = PLAN[selected]; if (day.rest) return;
+  const rec = store[recordKey(selected)];
+  const btn = document.getElementById("finishbtn");
+  if (!btn || !rec) return;
+  const all = day.ex.every((_,k)=> rec.ex[k]&&rec.ex[k].done);
+  btn.textContent = all ? "Session complete ✓" : "Mark session complete";
+  btn.classList.toggle("done", all);
+}
+
+function updateStats() {
+  const wk = weekId(new Date());
+  let wd=0, total=0;
+  Object.keys(store).forEach(k => {
+    if (store[k]&&store[k].done) { total++; if (k.startsWith(wk+"::")) wd++; }
+  });
+  document.getElementById("stat-week").innerHTML = `<span class="ac">${wd}</span>/5`;
+  document.getElementById("stat-total").textContent = total;
+  let streak=0;
+  for (let i=0;i<60;i++) {
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const dn=DAYS[(d.getDay()+6)%7];
+    if (PLAN[dn].rest) continue;
+    const k=weekId(d)+"::"+dn;
+    if (store[k]&&store[k].done) streak++;
+    else if (i>0) break;
+  }
+  document.getElementById("stat-streak").textContent = streak;
+}
+
+// ── INIT ──
+buildPlan();
+renderLog();
+</script>
+</body>
+</html>
